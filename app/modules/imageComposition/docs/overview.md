@@ -3,7 +3,7 @@
 ## Purpose
 
 `imageComposition` owns versioned baked image Contents whose base raster remains
-immutable and whose overlays are stored as safe, backend-generated SVG Contents.
+immutable and whose overlays are stored as safe, validated SVG Contents.
 It has no Post, Group, publication, or client-specific source dependency.
 
 ## Public API
@@ -31,10 +31,14 @@ catalog item mandatory.
 
 - The baked PNG is the default renderable Content and carries the versioned
   semantic recipe in `properties.imageComposition`.
-- The base raster and generated SVG stickers are referenced through durable
+- The base raster and validated SVG stickers are referenced through durable
   `ContentDependency` edges.
-- Sticker text is validated semantic input; clients never submit SVG markup.
-- Generated SVGs are escaped, deterministic, self-contained, and stored as raw
+- Client-defined SVGs are restricted to a small element and attribute allowlist.
+  Passive text presentation values are validated per element and grammar.
+- SVGs remain deterministic and self-contained: scripts, event handlers, style
+  blocks, CSS functions, external resources, links, filters, masks, and
+  clip-paths are rejected.
+- Accepted SVGs are stored as raw
   immutable Contents with restrictive serving headers.
 - Previews are baked from the final PNG, so ordinary clients show stickers
   without composition-specific preview logic.
