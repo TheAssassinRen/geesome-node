@@ -31,6 +31,56 @@ describe('image composition SVG validation', () => {
 		assert.equal(validateAndNormalizeImageCompositionStickerSvg(svg).svg, svg);
 	});
 
+	it('accepts bounded passive text presentation attributes on text elements', () => {
+		const svg = [
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">',
+			'<text x="10" y="30" font-stretch="condensed" font-width="75%"',
+			' letter-spacing="-0.5" word-spacing="1.25px"',
+			' font-variant="small-caps" text-decoration="underline line-through">',
+			'<tspan font-stretch="125%" letter-spacing="normal">Text</tspan>',
+			'</text></svg>',
+		].join('');
+		assert.equal(validateAndNormalizeImageCompositionStickerSvg(svg).svg, svg);
+	});
+
+	it('rejects text presentation attributes on non-text elements', () => {
+		for (const attribute of [
+			'font-stretch="condensed"',
+			'font-width="75%"',
+			'letter-spacing="1"',
+			'word-spacing="1px"',
+			'font-variant="small-caps"',
+			'text-decoration="underline"',
+		]) {
+			const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0" ${attribute}/></svg>`;
+			assert.throws(
+				() => validateAndNormalizeImageCompositionStickerSvg(svg),
+				/composition_invalid/,
+			);
+		}
+	});
+
+	it('rejects unbounded or functional text presentation values', () => {
+		for (const attribute of [
+			'font-stretch="49%"',
+			'font-stretch="201%"',
+			'font-stretch="calc(100%)"',
+			'font-width="wider"',
+			'letter-spacing="10001px"',
+			'letter-spacing="var(--spacing)"',
+			'word-spacing="1vh"',
+			'font-variant="small-caps contextual"',
+			'text-decoration="none underline"',
+			'text-decoration="underline underline"',
+		]) {
+			const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text ${attribute}>Text</text></svg>`;
+			assert.throws(
+				() => validateAndNormalizeImageCompositionStickerSvg(svg),
+				/composition_invalid/,
+			);
+		}
+	});
+
 	it('rejects active content, external resources, CSS URLs, and XML entities', () => {
 		const attacks = [
 			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>alert(1)</script></svg>',
